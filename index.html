@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عارض البيانات الرسومية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            direction: rtl;
+        }
+
+        body {
+            font-family: 'Cairo', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-section {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Home Page Styles */
+        .home-header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .home-header .icon-circle {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 40px;
+        }
+
+        .home-header h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-header p {
+            font-size: 18px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .chart-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .chart-card-icon {
+            width: 60px;
+            height: 60px;
+            background: #e0e7ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 28px;
+            color: #2563eb;
+        }
+
+        .chart-card h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .chart-card p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .saved-projects {
+            margin-top: 30px;
+        }
+
+        .saved-projects-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .saved-projects-header h2 {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .project-count {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .projects-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .project-item {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .project-item:hover {
+            background-color: #e5e7eb;
+        }
+
+        .project-info h3 {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .project-info p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #2563eb;
+        }
+
+        /* Data Entry Page */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: 'Cairo', system-ui, sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.15);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .form-actions-left {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Display Page */
+        .display-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .chart-header-title h2 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .chart-header-title p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .chart-type-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chart-type-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f3f4f6;
+            color: #333;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', system-ui, sans-serif;
+        }
+
+        .chart-type-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .chart-type-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        #chartCanvas {
+            max-height: 450px;
+            margin: 20px 0;
+            width: 100% !important;
+        }
+
+        .chart-display-area {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .data-table th {
+            padding: 12px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            text-align: right;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f3f4f6;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+            flex-wrap: wrap;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .stats-card-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stats-card-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stats-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-container h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .back-btn {
+            background: #e5e7eb;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Cairo', system-ui, sans-serif;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: #d1d5db;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Loading Overlay for Capture */
+        #captureOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .display-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-cards-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .home-header h1 {
+                font-size: 32px;
+            }
+
+            .chart-actions {
+                flex-direction: column;
+            }
+
+            .chart-actions > div {
+                width: 100%;
+                display: flex;
+                gap: 10px;
+            }
+
+            .chart-actions > div > button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="captureOverlay">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>جاري تحضير الصورة...</p>
+    </div>
+
+    <!-- Home Page -->
+    <div id="homePage" class="page-section container">
+        <div class="home-header">
+            <div class="icon-circle">
+                <i class="fas fa-chart-line"></i>
+            </div>
+                <h1>عارض البيانات الرسومية</h1>
+        </div>
+
+        <div class="chart-cards-grid">
+            <div class="chart-card" onclick="startChart('bar')">
+                <div class="chart-card-icon"><i class="fas fa-chart-bar"></i></div>
+                <h3>التمثيل بالأعمدة</h3>
+                <p>مقارنة الفئات بقيمها</p>
+            </div>
+            <div class="chart-card" onclick="startChart('line')">
+                <div class="chart-card-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>التمثيل الخطي</h3>
+                <p>اتجاهات البيانات عبر الزمن</p>
+            </div>
+            <div class="chart-card" onclick="startChart('pie')">
+                <div class="chart-card-icon"><i class="fas fa-chart-pie"></i></div>
+                <h3>القطاعات الدائرية</h3>
+                <p>نسب مئوية وتوزيع</p>
+            </div>
+            <div class="chart-card" onclick="startChart('histogram')">
+                <div class="chart-card-icon"><i class="fas fa-chart-area"></i></div>
+                <h3>المدرج التكراري</h3>
+                <p>توزيع التكرارات</p>
+            </div>
+            <div class="chart-card" onclick="startChart('table')">
+                <div class="chart-card-icon"><i class="fas fa-table"></i></div>
+                <h3>الجداول</h3>
+                <p>عرض منظم للبيانات</p>
+            </div>
+        </div>
+
+        <div class="glass-card saved-projects">
+            <div class="saved-projects-header">
+                <h2><i class="fas fa-folder-open" style="margin-left: 10px;"></i> مشاريعك المحفوظة</h2>
+                <span class="project-count"><span id="projectCount">0</span> مشروع</span>
+            </div>
+            <div id="projectsList" class="projects-list">
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>لا توجد مشاريع محفوظة بعد</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Entry Page -->
+    <div id="dataPage" class="page-section container hidden">
+        <div class="glass-card">
+            <div class="page-header">
+                <h2><i class="fas fa-edit" style="margin-left: 10px;"></i> إدخال البيانات</h2>
+                <button class="back-btn" onclick="showPage('home')"><i class="fas fa-arrow-right"></i> العودة</button>
+            </div>
+
+            <form onsubmit="return false;">
+                <div class="form-group">
+                    <label><i class="fas fa-tag" style="margin-left: 8px; color: #3b82f6;"></i> اسم المشروع:</label>
+                    <input type="text" id="projectName" placeholder="مثال: مبيعات الربع الأول 2024">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-list" style="margin-left: 8px; color: #3b82f6;"></i> أسماء الفئات:</label>
+                        <textarea id="categories" placeholder="اكتب كل فئة في سطر منفصل&#10;مثال:&#10;يناير&#10;فبراير&#10;مارس"></textarea>
+                        <div class="form-hint"><i class="fas fa-info-circle" style="margin-left: 5px;"></i> اكتب كل فئة في سطر منفصل أو افصلها بفواصل</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-hashtag" style="margin-left: 8px; color: #10b981;"></i> القيم الرقمية:</label>
+                        <textarea id="values" placeholder="اكتب كل قيمة في سطر منفصل&#10;مثال:&#10;15000&#10;23000&#10;18000"></textarea>
+                        <div class="form-hint"><i class="fas fa-info-circle" style="margin-left: 5px;"></i> أدخل أعداداً صحيحة أو عشرية</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-palette" style="margin-left: 8px; color: #8b5cf6;"></i> اختر نظام الألوان:</label>
+                    <div class="color-picker">
+                        <div class="color-option" data-scheme="blue" style="background: linear-gradient(135deg, #3b82f6, #1e40af);" onclick="selectColor('blue')"></div>
+                        <div class="color-option" data-scheme="green" style="background: linear-gradient(135deg, #10b981, #047857);" onclick="selectColor('green')"></div>
+                        <div class="color-option" data-scheme="orange" style="background: linear-gradient(135deg, #f97316, #c2410c);" onclick="selectColor('orange')"></div>
+                        <div class="color-option" data-scheme="purple" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);" onclick="selectColor('purple')"></div>
+                        <div class="color-option" data-scheme="pink" style="background: linear-gradient(135deg, #ec4899, #be185d);" onclick="selectColor('pink')"></div>
+                        <div class="color-option selected" data-scheme="multi" style="background: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6, #3b82f6);" onclick="selectColor('multi')"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div class="form-actions-left">
+                        <button type="button" class="btn btn-secondary" onclick="generateRandomData()"><i class="fas fa-dice"></i> بيانات عشوائية</button>
+                        <button type="button" class="btn btn-danger" onclick="clearForm()"><i class="fas fa-trash-alt"></i> مسح</button>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="submitData()"><i class="fas fa-chart-bar"></i> عرض البيانات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Display Page -->
+    <div id="displayPage" class="page-section container hidden">
+        <div class="display-grid">
+            <!-- Chart Area -->
+            <div class="chart-container" id="printableArea">
+                <div class="chart-header">
+                    <div class="chart-header-title">
+                        <h2 id="chartTitle">التمثيل بالأعمدة</h2>
+                        <p id="chartSubtitle"></p>
+                    </div>
+                    <div class="chart-type-buttons">
+                        <button class="chart-type-btn active" data-type="bar" onclick="switchChart('bar')">أعمدة</button>
+                        <button class="chart-type-btn" data-type="line" onclick="switchChart('line')">خطي</button>
+                        <button class="chart-type-btn" data-type="pie" onclick="switchChart('pie')">دائري</button>
+                        <button class="chart-type-btn" data-type="histogram" onclick="switchChart('histogram')">مدرج</button>
+                        <button class="chart-type-btn" data-type="table" onclick="switchChart('table')">جدول</button>
+                    </div>
+                </div>
+
+                <div class="chart-display-area" id="mainVisual">
+                    <canvas id="chartCanvas" style="display: none;"></canvas>
+                    <div id="tableView" style="display: none; width: 100%;">
+                        <div class="table-container" id="tableToCapture">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>الفئة</th>
+                                        <th>القيمة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="noData" class="empty-state" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>لا توجد بيانات لعرضها</p>
+                    </div>
+                </div>
+
+                <div class="chart-actions">
+                    <div>
+                        <button class="btn btn-success" onclick="downloadVisualization()"><i class="fas fa-download"></i> تحميل PNG</button>
+                        <button class="btn btn-info" onclick="printChart()"><i class="fas fa-print"></i> طباعة</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="saveProject()"><i class="fas fa-save"></i> حفظ المشروع</button>
+                        <button class="btn btn-secondary" onclick="editData()"><i class="fas fa-edit"></i> تعديل</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Sidebar -->
+            <div class="stats-container">
+                <h3><i class="fas fa-calculator" style="margin-left: 8px;"></i> الإحصائيات</h3>
+                <div id="statsContainer"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="back-btn" onclick="showPage('home')">العودة إلى الرئيسية</button>
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        const appState = {
+            currentPage: 'home',
+            currentChartType: 'bar',
+            projectName: '',
+            categories: [],
+            values: [],
+            colorScheme: 'blue',
+            savedProjects: [],
+            chart: null,
+            isTableActive: false
+        };
+
+        const COLORS = {
+          
+
+            blue: ['#3b82f6', '#1e40af', '#0c4a6e', '#0369a1', '#0284c7'],
+            green: ['#10b981', '#047857', '#065f46', '#064e3b', '#0f766e'],
+            orange: ['#f97316', '#c2410c', '#92400e', '#7c2d12', '#431407'],
+            purple: ['#8b5cf6', '#6d28d9', '#5b21b6', '#4c1d95', '#3c0f70'],
+            pink: ['#ec4899', '#be185d', '#9d174d', '#831843', '#500724'],            
+            multi: ['#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#10b981']
+        };
+
+        const CHART_COLORS = {
+            blue: '#667eea',
+            green: '#10b981',
+            orange: '#f97316',
+            purple: '#8b5cf6',
+            pink: '#ec4899',
+            multi: '#3b82f6'
+        };
+
+        // Initialize
+        function init() {
+            loadSavedProjects();
+            showPage('home');
+        }
+
+        // Page Navigation
+        function showPage(page) {
+            document.getElementById('homePage').classList.toggle('hidden', page !== 'home');
+            document.getElementById('dataPage').classList.toggle('hidden', page !== 'data');
+            document.getElementById('displayPage').classList.toggle('hidden', page !== 'display');
+            appState.currentPage = page;
+        }
+
+        function startChart(type) {
+            appState.currentChartType = type;
+            showPage('data');
+            if (!document.getElementById('categories').value) {
+                document.getElementById('projectName').value = 'مبيعات الربع الأول';
+                document.getElementById('categories').value = 'يناير\nفبراير\nمارس\nأبريل\nمايو';
+                document.getElementById('values').value = '15000\n23000\n18000\n32000\n28000';
+            }
+        }
+
+        // Data Parsing
+        function parseInput(input) {
+            return input.split(/[\n,]/).map(item => item.trim()).filter(item => item.length > 0);
+        }
+
+        function parseNumber(value) {
+            const cleaned = value.replace(/,/g, '');
+            return parseFloat(cleaned) || 0;
+        }
+
+        // Statistics Calculation
+        function calculateStats(vals) {
+            if (vals.length === 0) return { sum: 0, mean: 0, median: 0, mode: '-', min: 0, max: 0, std: 0 };
+
+            const sum = vals.reduce((a, b) => a + b, 0);
+            const mean = sum / vals.length;
+            const sorted = [...vals].sort((a, b) => a - b);
+            const median = vals.length % 2 === 0 ? (sorted[vals.length / 2 - 1] + sorted[vals.length / 2]) / 2 : sorted[Math.floor(vals.length / 2)];
+
+            const frequency = {};
+            vals.forEach(v => { frequency[v] = (frequency[v] || 0) + 1; });
+            const mode = Object.keys(frequency).reduce((a, b) => (frequency[+a] > frequency[+b] ? a : b), '0');
+
+            const min = Math.min(...vals);
+            const max = Math.max(...vals);
+            const variance = vals.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / vals.length;
+            const std = Math.sqrt(variance);
+
+            return { sum: Math.round(sum * 100) / 100, mean: Math.round(mean * 100) / 100, median: Math.round(median * 100) / 100, mode, min, max, std: Math.round(std * 100) / 100 };
+        }
+
+        function displayStats(vals) {
+            const stats = calculateStats(vals);
+            const statsData = [
+                { label: 'المجموع', value: stats.sum, color: '#3b82f6' },
+                { label: 'المتوسط', value: stats.mean, color: '#10b981' },
+                { label: 'الوسيط', value: stats.median, color: '#8b5cf6' },
+                { label: 'المنوال', value: stats.mode, color: '#f97316' },
+                { label: 'الحد الأدنى', value: stats.min, color: '#ec4899' },
+                { label: 'الحد الأقصى', value: stats.max, color: '#ef4444' },
+                { label: 'الانحراف المعياري', value: stats.std, color: '#06b6d4' }
+            ];
+
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = statsData.map(stat => `
+                <div class="stats-card" style="background: linear-gradient(135deg, ${stat.color} 0%, ${stat.color}dd 100%);">
+                    <div class="stats-card-label">${stat.label}</div>
+                    <div class="stats-card-value">${typeof stat.value === 'number' ? stat.value.toLocaleString('ar-SA') : stat.value}</div>
+                </div>
+            `).join('');
+        }
+
+        // Form Functions
+        function selectColor(scheme) {
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector(`[data-scheme="${scheme}"]`).classList.add('selected');
+            appState.colorScheme = scheme;
+        }
+
+        function generateRandomData() {
+            const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'];
+            const randomValues = months.map(() => Math.floor(Math.random() * 50000) + 5000);
+            document.getElementById('categories').value = months.join('\n');
+            document.getElementById('values').value = randomValues.join('\n');
+            document.getElementById('projectName').value = 'بيانات عشوائية';
+        }
+
+        function clearForm() {
+            document.getElementById('projectName').value = '';
+            document.getElementById('categories').value = '';
+            document.getElementById('values').value = '';
+        }
+
+        function submitData() {
+            const cats = parseInput(document.getElementById('categories').value);
+            const vals = parseInput(document.getElementById('values').value).map(parseNumber);
+
+            if (cats.length === 0 || vals.length === 0 || cats.length !== vals.length) {
+                alert('يرجى إدخال بيانات صحيحة: نفس عدد الفئات والقيم');
+                return;
+            }
+
+            appState.projectName = document.getElementById('projectName').value;
+            appState.categories = cats;
+            appState.values = vals;
+
+            if (appState.currentChartType === 'pie' && vals.some(v => v < 0)) {
+                alert('تم تغيير العرض إلى الأعمدة (القيم السالبة لا تناسب المخطط الدائري)');
+                appState.currentChartType = 'bar';
+            }
+
+            displayChart();
+            displayStats(vals);
+            showPage('display');
+        }
+
+        function editData() {
+            document.getElementById('projectName').value = appState.projectName;
+            document.getElementById('categories').value = appState.categories.join('\n');
+            document.getElementById('values').value = appState.values.join('\n');
+            showPage('data');
+        }
+
+        // Chart Functions
+        function switchChart(type) {
+            appState.currentChartType = type;
+            document.querySelectorAll('.chart-type-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-type="${type}"]`).classList.add('active');
+            displayChart();
+        }
+
+        function displayChart() {
+            const chartCanvas = document.getElementById('chartCanvas');
+            const tableView = document.getElementById('tableView');
+            const noData = document.getElementById('noData');
+
+            if (appState.values.length === 0) {
+                chartCanvas.style.display = 'none';
+                tableView.style.display = 'none';
+                noData.style.display = 'block';
+                return;
+            }
+
+            if (appState.currentChartType === 'table') {
+                chartCanvas.style.display = 'none';
+                noData.style.display = 'none';
+                tableView.style.display = 'block';
+                appState.isTableActive = true;
+                displayTable();
+            } else {
+                tableView.style.display = 'none';
+                noData.style.display = 'none';
+                chartCanvas.style.display = 'block';
+                appState.isTableActive = false;
+                drawChart();
+            }
+
+            updateChartTitle();
+        }
+
+        function updateChartTitle() {
+            const titles = {
+                bar: 'التمثيل بالأعمدة',
+                line: 'التمثيل الخطي',
+                pie: 'القطاعات الدائرية',
+                histogram: 'المدرج التكراري',
+                table: 'الجدول'
+            };
+            document.getElementById('chartTitle').textContent = titles[appState.currentChartType];
+            document.getElementById('chartSubtitle').textContent = appState.projectName;
+        }
+
+        function drawChart() {
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            const colors = COLORS[appState.colorScheme];
+            
+            if (appState.chart) appState.chart.destroy();
+
+            const chartData = {
+                labels: appState.categories,
+                datasets: [{
+                    label: 'القيمة',
+                    data: appState.values,
+                    backgroundColor: appState.currentChartType === 'pie' ? colors : colors[0],
+                    borderColor: appState.currentChartType === 'pie' ? '#fff' : colors[1],
+                    borderWidth: 2,
+                    fill: appState.currentChartType !== 'line',
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: colors[0],
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            };
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: { family: "'Cairo', system-ui, sans-serif", size: 12 },
+                            color: '#333'
+                        }
+                    }
+                },
+                scales: appState.currentChartType !== 'pie' ? {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { family: "'Cairo', system-ui, sans-serif" }, color: '#666' },
+                        grid: { color: '#e5e7eb' }
+                    },
+                    x: {
+                        ticks: { font: { family: "'Cairo', system-ui, sans-serif" }, color: '#666' },
+                        grid: { color: '#e5e7eb' }
+                    }
+                } : {}
+            };
+
+            const type = appState.currentChartType === 'histogram' ? 'bar' : appState.currentChartType;
+            if (appState.currentChartType === 'histogram') {
+                chartOptions.indexAxis = 'y';
+            }
+
+            appState.chart = new Chart(ctx, { 
+                type: type, 
+                data: chartData, 
+                options: chartOptions 
+            });
+        }
+
+        function displayTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = appState.categories.map((cat, idx) => `
+                <tr>
+                    <td>${cat}</td>
+                    <td>${appState.values[idx].toLocaleString('ar-SA')}</td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * Download Visualization Function
+         * Handles both Canvas (Charts) and HTML Elements (Tables)
+         */
+        async function downloadVisualization() {
+            const overlay = document.getElementById('captureOverlay');
+            overlay.style.display = 'flex';
+
+            try {
+                let dataUrl;
+                const fileName = `${appState.projectName || 'data-viz'}.png`;
+
+                if (appState.isTableActive) {
+                    // Logic to capture Table as image using html2canvas
+                    const element = document.getElementById('tableToCapture');
+                    const canvas = await html2canvas(element, {
+                        backgroundColor: '#ffffff',
+                        scale: 2, // Higher quality
+                        logging: false,
+                        useCORS: true
+                    });
+                    dataUrl = canvas.toDataURL('image/png');
+                } else {
+                    // Logic to capture Chart Canvas
+                    const canvas = document.getElementById('chartCanvas');
+                    
+                    // Create a secondary canvas to add white background (since original might be transparent)
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = canvas.width;
+                    tempCanvas.height = canvas.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    tempCtx.fillStyle = '#ffffff';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                    tempCtx.drawImage(canvas, 0, 0);
+                    
+                    dataUrl = tempCanvas.toDataURL('image/png');
+                }
+
+                // Trigger Download
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            } catch (error) {
+                console.error("Capture Error:", error);
+                alert('عذراً، حدث خطأ أثناء محاولة حفظ الصورة.');
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function printChart() {
+            window.print();
+        }
+
+        // Project Management
+        function saveProject() {
+            if (!appState.projectName.trim()) {
+                alert('يرجى إدخال اسم المشروع');
+                return;
+            }
+
+            const project = {
+                id: Date.now().toString(),
+                name: appState.projectName,
+                categories: appState.categories,
+                values: appState.values,
+                colorScheme: appState.colorScheme,
+                chartType: appState.currentChartType
+            };
+
+            appState.savedProjects.push(project);
+            localStorage.setItem('dataVizProjects', JSON.stringify(appState.savedProjects));
+            alert('تم حفظ المشروع بنجاح');
+            loadSavedProjects();
+        }
+
+        function loadSavedProjects() {
+            const saved = localStorage.getItem('dataVizProjects');
+            appState.savedProjects = saved ? JSON.parse(saved) : [];
+            displaySavedProjects();
+        }
+
+        function displaySavedProjects() {
+            const container = document.getElementById('projectsList');
+            document.getElementById('projectCount').textContent = appState.savedProjects.length;
+
+            if (appState.savedProjects.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد مشاريع محفوظة بعد</p></div>';
+                return;
+            }
+
+            container.innerHTML = appState.savedProjects.map(project => `
+                <div class="project-item">
+                    <div class="project-info">
+                        <h3>${project.name}</h3>
+                        <p>${project.categories.length} فئة</p>
+                    </div>
+                    <div class="project-actions">
+                        <button class="btn btn-success" onclick="loadProject('${project.id}')">فتح</button>
+                        <button class="btn btn-danger" onclick="deleteProject('${project.id}')">حذف</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadProject(id) {
+            const project = appState.savedProjects.find(p => p.id === id);
+            if (!project) return;
+
+            appState.projectName = project.name;
+            appState.categories = project.categories;
+            appState.values = project.values;
+            appState.colorScheme = project.colorScheme;
+            appState.currentChartType = project.chartType;
+
+            displayChart();
+            displayStats(project.values);
+            showPage('display');
+        }
+
+        function deleteProject(id) {
+            if (confirm('هل تريد حذف هذا المشروع؟')) {
+                appState.savedProjects = appState.savedProjects.filter(p => p.id !== id);
+                localStorage.setItem('dataVizProjects', JSON.stringify(appState.savedProjects));
+                displaySavedProjects();
+            }
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
